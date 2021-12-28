@@ -2,7 +2,9 @@ package com.example.review.controller;
 
 import com.example.review.config.ResponseResult;
 import com.example.review.domain.dto.AddReviewParam;
+import com.example.review.domain.dto.DeleteReviewParam;
 import com.example.review.domain.dto.ModifyReviewParam;
+import com.example.review.domain.dto.ReviewResult;
 import com.example.review.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,19 +21,23 @@ public class ReviewController {
     // 리뷰 추가
     @PostMapping
     public ResponseEntity addReview(@Validated @RequestBody AddReviewParam addReviewParam) {
-        return this.reviewService.addReview(addReviewParam).createResponseEntity();
+        ReviewResult reviewResult = this.reviewService.addReview(addReviewParam);
+        return ResponseResult.ok(reviewResult).createResponseEntity();
     }
 
     // 리뷰 수정
     @PutMapping("/{review-id}")
     public ResponseEntity modifyReview(@PathVariable("review-id") String reviewId,
                                        @Validated @RequestBody ModifyReviewParam modifyReviewParam) {
-        return this.reviewService.modifyReview(reviewId, modifyReviewParam).createResponseEntity();
+        this.reviewService.modifyReview(reviewId, modifyReviewParam);
+        return ResponseResult.ok().createResponseEntity();
     }
 
     // 리뷰 삭제
     @DeleteMapping("/{review-id}")
-    public ResponseEntity deleteReview(@PathVariable("review-id") String reviewId) {
-        return this.reviewService.deleteReview(reviewId).createResponseEntity();
+    public ResponseEntity deleteReview(@PathVariable("review-id") String reviewId,
+                                       @Validated @RequestBody DeleteReviewParam deleteReviewParam) {
+        this.reviewService.deleteReview(reviewId, deleteReviewParam);
+        return ResponseResult.ok().createResponseEntity();
     }
 }

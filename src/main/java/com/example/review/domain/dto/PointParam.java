@@ -3,7 +3,6 @@ package com.example.review.domain.dto;
 import com.example.review.domain.PointType;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.ToString;
 
 @Getter
 public class PointParam {
@@ -28,7 +27,6 @@ public class PointParam {
         return newPointParam;
     }
 
-    @ToString
     static class Reason {
         private String reviewId;
         private boolean review;
@@ -41,6 +39,22 @@ public class PointParam {
             this.review = review;
             this.photo = photo;
             this.firstReview = firstReview;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder str = new StringBuilder();
+            str.append("review point : reviewId = '").append(this.reviewId).append('\'');
+            if(this.review) {
+                str.append(", review = 1");
+            }
+            if(this.photo) {
+                str.append(", photo = 1");
+            }
+            if(this.firstReview) {
+                str.append(", firstReview = 1");
+            }
+            return str.toString();
         }
     }
 

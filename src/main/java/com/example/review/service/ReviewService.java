@@ -2,13 +2,10 @@ package com.example.review.service;
 
 import com.example.review.client.PointServiceClient;
 import com.example.review.config.Code;
-import com.example.review.config.ResponseResult;
 import com.example.review.config.TripleException;
 import com.example.review.domain.PointType;
 import com.example.review.domain.Review;
-import com.example.review.domain.dto.AddReviewParam;
-import com.example.review.domain.dto.ModifyReviewParam;
-import com.example.review.domain.dto.PointParam;
+import com.example.review.domain.dto.*;
 import com.example.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,23 +20,26 @@ public class ReviewService {
 
     // 리뷰 추가
     @Transactional
-    public ResponseResult<Object> addReview(AddReviewParam addReviewParam) {
+    public ReviewResult addReview(AddReviewParam addReviewParam) {
         this.checkAlreadyReviewInPlace(addReviewParam.getUserId(), addReviewParam.getPlaceId());
-        Review review = Review.createReview(addReviewParam);
+        boolean existFirstReviewInPlace = this.existFirstReviewInPlace(addReviewParam.getPlaceId());
+        Review review = Review.createReview(addReviewParam, existFirstReviewInPlace);
         Review savedReview = this.reviewRepository.save(review);
 
-        boolean existFirstReviewInPlace = this.existFirstReviewInPlace(addReviewParam.getPlaceId());
         boolean existsPhoto = review.getUsedReviewPhotoCnt() > 0;
         PointParam pointParam =
-                PointParam.createPointParam(savedReview.getId(), addReviewParam.getUserId(), PointType.ADD, true, existsPhoto, existFirstReviewInPlace);
-        return this.pointServiceClient.postPoint(pointParam);
+                PointParam.createPointParam(savedReview.getId(), addReviewParam.getUserId(), PointType.ADD, true, existsPhoto, !existFirstReviewInPlace);
+        this.pointServiceClient.postPoint(pointParam);
+        return ReviewResult.createReviewResult(savedReview.getId());
     }
 
     // 리뷰 수정
     @Transactional
-    public ResponseResult<Object> modifyReview(String reviewId, ModifyReviewParam modifyReviewParam) {
-        ResponseResult<Object> result = ResponseResult.ok();
+    public void modifyReview(String reviewId, ModifyReviewParam modifyReviewParam) {
         Review review = this.getReview(reviewId);
+        if(!review.getUserId().equals(modifyReviewParam.getUserId())) {
+            throw new TripleException(Code.NOT_WRITER_OF_THE_REVIEW);
+        }
         boolean beforeExistsPhoto = review.getUsedReviewPhotoCnt() > 0;
         review.changeReview(modifyReviewParam);
         boolean afterExistsPhoto = review.getUsedReviewPhotoCnt() > 0;
@@ -51,28 +51,32 @@ public class ReviewService {
             pointParam = PointParam.createPointParam(review.getId(), review.getUserId(), PointType.DELETE, false, true, false);
         }
         if(pointParam != null) {
-            result = this.pointServiceClient.postPoint(pointParam);
+            this.pointServiceClient.postPoint(pointParam);
         }
-        return result;
     }
 
     // 리뷰 삭제
     @Transactional
-    public ResponseResult<Object> deleteReview(String reviewId) {
+    public void deleteReview(String reviewId, DeleteReviewParam deleteReviewParam) {
         Review review = this.getReview(reviewId);
+        if(!review.getUserId().equals(deleteReviewParam.getUserId())) {
+            throw new TripleException(Code.NOT_WRITER_OF_THE_REVIEW);
+        }
         boolean existsPhoto = review.getUsedReviewPhotoCnt() > 0;
         boolean firstReviewYn = review.getFirstReviewYn();
         review.deleteReview();
         PointParam pointParam =
                 PointParam.createPointParam(review.getId(), review.getUserId(), PointType.DELETE, true, existsPhoto, firstReviewYn);
-        return this.pointServiceClient.postPoint(pointParam);
+        this.pointServiceClient.postPoint(pointParam);
     }
 
+    // 리뷰 조회
     private Review getReview(String reviewId) {
         return this.reviewRepository.findByIdAndDelYn(reviewId, false)
                 .orElseThrow(() -> new TripleException(Code.REVIEW_NOT_FOUND));
     }
 
+    // 이미 해당 지역에 리뷰를 했는지 확인
     private void checkAlreadyReviewInPlace(String userId, String placeId) {
         boolean existReviewByUser
                 = this.reviewRepository.existsByUserIdAndPlaceId(userId, placeId);
@@ -81,6 +85,7 @@ public class ReviewService {
             throw new TripleException(Code.ALREADY_REVIEW_IN_PLACE);
     }
 
+    // 해당 지역에 첫번째 리뷰가 존재하는지 확인
     private boolean existFirstReviewInPlace(String placeId) {
         return this.reviewRepository.existsByPlaceIdAndFirstReviewYn(placeId, true);
     }

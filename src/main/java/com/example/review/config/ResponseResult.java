@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class ResponseResult<T> {
 
-    private String code;
+    private Code code;
 
     private T data;
 
@@ -28,12 +28,12 @@ public class ResponseResult<T> {
     private HttpStatus httpStatus;
 
     public ResponseResult(Code code) {
-        this.code = code.getCode();
+        this.code = code;
         this.message = code.getMessage();
     }
 
     public ResponseResult(String message) {
-        this.code = Code.SERVER_ERROR.getCode();
+        this.code = Code.SERVER_ERROR;
         this.message = message;
     }
 
@@ -56,7 +56,7 @@ public class ResponseResult<T> {
     }
 
     public ResponseResult<T> code(@NotNull Code code) {
-        this.code = code.getCode();
+        this.code = code;
         return this;
     }
 

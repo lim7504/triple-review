@@ -1,6 +1,5 @@
 package com.example.review.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import org.hibernate.annotations.GenericGenerator;
 

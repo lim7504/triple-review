@@ -7,7 +7,9 @@ import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Entity
@@ -33,13 +35,13 @@ public class Review extends CreatedModifiedAuditing{
     private List<ReviewPhoto> reviewPhotos = new ArrayList<>();
 
     // 리뷰 추가
-    public static Review createReview(AddReviewParam addReviewParam) {
+    public static Review createReview(AddReviewParam addReviewParam, boolean existFirstReviewInPlace) {
         Review newReview = new Review();
         newReview.placeId = addReviewParam.getPlaceId();
         newReview.userId = addReviewParam.getUserId();
         newReview.content = addReviewParam.getContent();
         newReview.delYn = false;
-        newReview.firstReviewYn = false;
+        newReview.firstReviewYn = !existFirstReviewInPlace;
         for (String attachedPhotoId : addReviewParam.getAttachedPhotoIds()) {
             ReviewPhoto reviewPhoto = ReviewPhoto.createReviewPhoto(newReview, attachedPhotoId);
             newReview.reviewPhotos.add(reviewPhoto);
@@ -71,6 +73,7 @@ public class Review extends CreatedModifiedAuditing{
                 .collect(Collectors.toList());
     }
 
+    // 사용중인 리뷰 갯수 조회
     public int getUsedReviewPhotoCnt() {
         return this.getUsedReviewPhoto().size();
     }

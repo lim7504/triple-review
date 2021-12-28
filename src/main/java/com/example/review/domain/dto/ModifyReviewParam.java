@@ -10,6 +10,9 @@ import java.util.List;
 @Getter
 public class ModifyReviewParam {
 
+    @Size(min = 36, max = 36)
+    private String userId;
+
     @NotNull
     @Size(min = 1)
     private String content;
