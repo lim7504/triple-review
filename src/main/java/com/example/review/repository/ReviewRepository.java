@@ -11,7 +11,7 @@ public interface ReviewRepository extends JpaRepository<Review, String> {
 
     Optional<Review> findByIdAndDelYn(String id, Boolean delYn);
 
-    boolean existsByUserIdAndPlaceId(String userId, String placeId);
+    boolean existsByUserIdAndPlaceIdAndDelYn(String userId, String placeId, Boolean delYn);
 
     boolean existsByPlaceIdAndFirstReviewYn(String placeId, Boolean firstReviewYn);
 

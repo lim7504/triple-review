@@ -79,7 +79,7 @@ public class ReviewService {
     // 이미 해당 지역에 리뷰를 했는지 확인
     private void checkAlreadyReviewInPlace(String userId, String placeId) {
         boolean existReviewByUser
-                = this.reviewRepository.existsByUserIdAndPlaceId(userId, placeId);
+                = this.reviewRepository.existsByUserIdAndPlaceIdAndDelYn(userId, placeId, false);
 
         if(existReviewByUser)
             throw new TripleException(Code.ALREADY_REVIEW_IN_PLACE);
